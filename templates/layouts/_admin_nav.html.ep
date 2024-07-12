@@ -1,0 +1,13 @@
+        <li class="active dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="fas fa-tools" style="color: #990000"></span> Admin Tools</a>
+          <ul class="dropdown-menu">
+              <li><a href="/admin"><span class="fas fa-cog"></span> Admin CP</a></li>
+          </ul>
+        </li>
+        <li class="active dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="fas fa-database" style="color: #999900"></span> Database</a>
+          <ul class="dropdown-menu">
+              <li><a href="/admin/database/posts"><span class="fas fa-cube"></span> Posts</a></li>
+              <li><a href="/admin/database/users"><span class="fas fa-cube"></span> Users</a></li>
+          </ul>
+        </li>

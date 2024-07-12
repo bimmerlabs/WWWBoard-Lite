@@ -1,0 +1,118 @@
+% no warnings 'uninitialized';
+% no warnings 'experimental::postderef';
+% use feature 'postderef';
+% layout 'basic';
+% my $name;
+% if ($db eq 'model') {
+%	$name = 'model_name';
+% }
+% elsif ($db eq 'exp_files') {
+%	$name = 'exp_name';
+% }
+% elsif ($db eq 'exp_settings') {
+%	$name = 'exp_name';
+% }
+% elsif ($db eq 'minion_joobs') {
+%	$name = 'created';
+% }
+% else {
+%	$name = 'name';
+% }
+% title "$title - $results->{$id}{$name}";
+% my $rowcount = 1;
+% my $previous = $id - 1;
+% my $next = $id + 1;
+<ul class="nav nav-tabs">
+  <li class="active dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#"><%= @{$ids} %> Results<span class="caret"></span></a>
+    <ul class="dropdown-menu">
+    % foreach my $id (@{$ids}) {
+        <li><a href="/admin/database_single/<%= $db %>/<%= $id %>/<%= $limits %>/<%= $column %>"><%= $results->{$id}{$name} %></a></li>
+    % }
+    </ul>
+  </li>
+  <li class="active dropdown">
+    <a href="/admin/database_single/<%= $db %>/<%= $low %>/<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-fast-backward"></span></a>
+  </li>
+  % if (defined $results->{$previous}{'id'}) {
+  <li class="active dropdown">
+    <a href="/admin/database_single/<%= $db %>/<%= $previous %>/<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-chevron-left"></span><%= $results->{$previous}{$name} %></a>
+  </li>
+  % }
+  % if (defined $results->{$next}{'id'}) {
+  <li class="active dropdown">
+    <a href="/admin/database_single/<%= $db %>/<%= $next %>/<%= $limits %>/<%= $column %>"><%= $results->{$next}{$name} %><span class="glyphicon glyphicon-chevron-right"></span></a>
+  </li>
+  % }
+  <li class="active dropdown">
+    <a href="/admin/database_single/<%= $db %>/<%= $high %>/<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-fast-forward"></span></a>
+  </li>
+  <li class="active dropdown">
+    <a href="/admin/database_single/<%= $db %>/<%= $id %>/<%= $limits %>/"><span class="glyphicon glyphicon-home"></span></a>
+  </li>
+</ul>
+<ul class="list-group">
+    <li class="list-group-item">
+    <b><%= $results->{$id}{$name} %>:</b>
+	<table id="EditRow" class="table table-striped table-bordered" style="display: block;">
+	<form action="/admin/editrow?_method=PUT" method="POST">
+	%= hidden_field table => $db
+	%= hidden_field routename => url_for('current')
+	<tr>
+		<th>Parameter:</th>
+		<th>
+		<button type="submit" class="btn btn-default btn-sm" style="color: SeaGreen;">
+			Save <span class="glyphicon glyphicon-floppy-disk"></span>
+		</button>
+		<a href="/admin/database/<%= $db %>" class="btn btn-default btn-sm">
+			Back <span class="glyphicon glyphicon-remove"></span> 
+		</a>
+		<button type="button" class="btn btn-default btn-sm" style="color: red;" onclick="myWarning2('/admin/droprow/<%= $db %>/<%= $results->{$id}{'id'} %>/admin/database/<%= $db %>', 'Are you sure you want to delete this Row?  This cannot be undone!')">
+		Delete <span class="glyphicon glyphicon-floppy-remove"></span>
+		</button>
+		</th>
+	</tr>
+	<tr>
+		<td>
+		id
+		</td>
+		<td>
+		%= hidden_field id => $results->{$id}{'id'}
+		<%= $results->{$id}{'id'} %>
+		
+		</td>
+	</tr>
+	% foreach my $column (@{$columns}) {
+	  % unless ($column eq 'id') {
+	<tr>
+		<td>	
+		<a href="/admin/database_single/<%= $db %>/<%= $results->{$id}{'id'} %>/<%= $limits %>/<%= $column %>"><%= $column %></a>
+		</td>
+		<td>
+		% if (grep /$column/, ('notes', 'description',)) {
+		%= text_area $column => $results->{$id}{$column}, cols => 40, rows => 10
+		% }
+		% else {
+		  % if ($db eq 'model' && $column eq 'setting_id'
+                    % || $db eq 'exp_files' && (grep /$column/, ('home_phone', 'parent', 'email', 'adult_id',))
+                    % || $db eq 'exp_settings' && $column eq 'photos'
+                    % || $db eq 'minion_jobs' && $column eq 'parents') {
+	            % my $array;
+	            % for ($results->{$id}{$column}->@*) { 
+	              % $array .= $_ .',';
+                    % }
+                    % chop $array;
+                <input name="<%= $column %>" size="40" value="{<%= $array %>}">
+                  % }
+                  % else {
+                %= input_tag $column => $results->{$id}{$column}, size => 40
+                  % }
+		% }
+		</td>
+	</tr>
+	  % }
+	% }
+	</form>
+	</table>
+    </li>
+</ul>

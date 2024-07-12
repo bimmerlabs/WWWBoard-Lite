@@ -1,0 +1,37 @@
+% no warnings 'experimental::postderef';
+% use feature 'postderef';
+% layout 'basic';
+% title 'Admin Control Panel';
+<ul class="nav nav-tabs">
+  <li class="active dropdown">
+  <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="fas fa-cog"></span> Admin Control Panel</a>
+  </li>
+</ul>
+<ul class="list-group">
+    <li class="list-group-item">
+	<h5>Database Info:</h5>
+	<table id="database" class="table table-striped table-bordered" style="width: 100%;">
+        <tr>
+            <th>Table</th>
+            <th>Total Rows</th>
+            <th>Last Entry</th>
+            <th>id</th>
+        </tr>
+	% my $i = 0;
+	% foreach (config->{'tables'}->@*) {
+	<tr>
+	    <td style="width: 20%;"><%= ucfirst $_ %></td>
+	    <td style="width: 20%;"><%= $rows->{$_} %></td>
+            <td class="overflow"><%= $results->{$_}{config->{'table_names'}[$i]} %></td>
+            <td style="width: 5%;"><a href="<%= url_for 'admin/database_single' %>/<%= $_ %>/<%= $results->{$_}{'id'} %>/51"><%= $results->{$_}{'id'} %></a></td>    
+        </tr>
+        % $i++;
+	% }
+	</table>
+	</ul>
+    </li>
+    <li class="list-group-item">
+	Perl <%= $^V %>.
+	<br>Mojolicious <%= $Mojolicious::VERSION %>.
+    </li>
+</ul>

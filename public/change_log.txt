@@ -1,0 +1,6 @@
+07/12/2024	0.1.A
+Start adding basic functionality, including the database connection
+
+	-Adds the Postgres Admin tool for managing the DB
+	-Add placeholder routes for account login/register
+	-Use Perl signatures

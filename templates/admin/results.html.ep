@@ -1,0 +1,293 @@
+% no warnings 'uninitialized';
+% no warnings 'experimental::postderef';
+% use feature 'postderef';
+% layout 'basic';
+% title "Admin CP - $title";
+% my $rowcount = 1;
+<ul class="list-group" id="AddColumn" style="display: none;">
+	<li class="list-group-item">
+	Note: All schema changes require app restart!
+	</li>
+	<li class="list-group-item">
+	<table class="table table-striped table-bordered" style="display: block;">
+	<form action="/admin/addcolumn" method="POST">
+		%= hidden_field table => $db
+	<tr>	
+		<td colspan="2">
+		<button type="submit" class="btn btn-default btn-sm" style="color: SeaGreen;">
+		  Add Column <span class="glyphicon glyphicon-floppy-disk"></span>
+		</button>
+		<button type="button" class="btn btn-default btn-sm" onclick="AddColumn()">
+		  Cancel <span class="glyphicon glyphicon-remove"></span> 
+		</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for column => "Column Name:"
+		</td>
+		<td>
+		%= input_tag 'column'
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for data_type => "Data Type:"
+		</td>
+		<td>
+		%= select_field data_type => ['text', 'smallint', 'integer', 'bigint', 'boolean', 'bigserial', 'real', 'double precision', 'bytea', 'uuid', 'json', 'jsonb',]
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for constraint => "NOT NULL (requires default value)"
+		</td>
+		<td>
+		%= check_box  'constraint'
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for array => "as Array"
+		</td>
+		<td>
+		%= check_box  'array'
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for defaultvalue => "Default Value:"
+		</td>
+		<td>
+		%= input_tag 'defaultvalue'
+		</td>
+	</tr>
+	</form>
+	</table>
+	</li>
+</ul>
+
+<ul class="list-group" id="RenameColumn" style="display: none;">
+	<li class="list-group-item" id="rename">
+	Note: All schema changes require app restart!
+	</li>
+	<li class="list-group-item">
+	<table class="table table-striped table-bordered" style="display: block;">
+	<form action="/admin/renamecolumn" method="POST">
+		%= hidden_field table => $db
+		%= hidden_field name => '', id => 'HiddenName', value => 'undefined'
+	<tr>	
+		<td colspan="2">
+		<button type="submit" class="btn btn-default btn-sm" style="color: SeaGreen;">
+		  Modify Column <span class="glyphicon glyphicon-floppy-disk"></span>
+		</button>
+		<button type="button" class="btn btn-default btn-sm" onclick="RenameColumn()">
+		  Cancel <span class="glyphicon glyphicon-remove"></span> 
+		</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for newname => "Column Name:"
+		</td>
+		<td>
+		%= input_tag 'newname', id => 'NewName', value => 'undefined'
+		</td>
+	</tr>
+	<tr>
+		<td>
+		%= label_for data_type => "Change data type (dangerous!):"
+		<br>
+		%= link_to 'Postgres Data Types' => 'https://www.postgresql.org/docs/9.6/static/datatype.html'
+		</td>
+		<td>
+		%= select_field data_type => ['', 'text', 'smallint', 'integer', 'bigint', 'boolean', 'bigserial', 'real', 'double precision', 'bytea', 'uuid', 'json', 'jsonb',]
+		</td>
+	</tr>
+	</form>
+	</table>
+	</li>
+</ul>
+
+<ul class="nav nav-tabs">
+  <li class="active dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#"><%= $title %>: <%= $rows %><span class="caret"></span></a>
+    <ul class="dropdown-menu">
+    % my $name;
+% if ($db eq 'model') {
+%	$name = 'model_name';
+% }
+% elsif ($db eq 'exp_files') {
+%	$name = 'exp_name';
+% }
+% elsif ($db eq 'exp_settings') {
+%	$name = 'exp_name';
+% }
+% elsif ($db eq 'minion_joobs') {
+%	$name = 'created';
+% }
+% else {
+%	$name = 'name';
+% }
+    % foreach my $id (@{$ids}) {
+        <li><a href="/admin/database_single/<%= $db %>/<%= $id %>/<%= $limits %>"><%= $results->{$id}{$name} %></a></li>
+    % }
+    </ul>
+  </li>
+  <li class="active dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Columns<span class="caret"></span></a>
+    <ul class="dropdown-menu">
+    % foreach my $column (@{$columns}) {
+    	% unless ($column eq 'id') {
+        <li><a href="#<%= $column %>"><%= $column %></a></li>
+        % }
+    % }
+    </ul>
+  </li>
+  <li class="active dropdown">
+    <a href="#" onclick="AddColumn()"><span class="glyphicon glyphicon-plus" style="color: #337ab7;"></span> Column</a>
+  </li>
+  <li class="active dropdown">
+    <a href="#" onclick="AddRow()"><span class="glyphicon glyphicon-plus" style="color: SeaGreen;"></span> Row</a>
+  </li>
+  % my $previous = $ids->[0];
+  % my $next = $ids->[-1];
+  <li class="active dropdown">
+    <a href="/admin/database/<%= $db %>/<%= $low %>-<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-fast-backward"></span></a>
+  </li>
+  % if (defined $results->{$previous}{'id'}) {
+  <li class="active dropdown">
+    <a href="/admin/database/<%= $db %>/<%= $previous %>-<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-chevron-left"></span><%= $results->{$previous}{'id'} %></a>
+  </li>
+  % }
+  % if (defined $results->{$next}{'id'}) {
+  <li class="active dropdown">
+    <a href="/admin/database/<%= $db %>/<%= $next %>-<%= $limits %>/<%= $column %>"><%= $results->{$next}{'id'} %><span class="glyphicon glyphicon-chevron-right"></span></a>
+  </li>
+  % }
+  <li class="active dropdown">
+    <a href="/admin/database/<%= $db %>/<%= $high %>-<%= $limits %>/<%= $column %>"><span class="glyphicon glyphicon-fast-forward"></span></a>
+  </li>
+  <li class="active dropdown">
+    <a href="/admin/database/<%= $db %>/"><span class="glyphicon glyphicon-home"></span></a>
+  </li>
+  <li class="active dropdown">
+    <a href="#">
+    <form action="/admin/database_search/<%= $db %>"> 
+    %= select_field col_name => $columns
+    %= select_field operator => ['=', '!=', '~', '~*', '!~', '!~*', '<>', '@>', '<@']
+    %= text_field 'query', style => 'padding: 0px 0px; margin: 0px 0;  box-sizing: border-box;'
+    <button type="submit" class="btn btn-default btn-xs">
+	<span class="glyphicon glyphicon-search" style="color: #00b2ff;"></span>
+    </button>
+    </form>
+    </a>
+  </li>
+</ul>
+
+<table id="AddRow" class="table table-striped table-bordered" style="display: none;">
+<form action="/admin/addrow">
+%= hidden_field table => $db
+%= hidden_field routename => "database/$db"
+<tr>	
+	<th>Parameter:</th>
+	<th>
+	<button type="submit" class="btn btn-default btn-xs" style="color: SeaGreen;">
+		Add Row <span class="glyphicon glyphicon-floppy-disk"></span>
+	</button>
+	<button type="button" class="btn btn-default btn-xs" onclick="AddRow()">
+		Cancel <span class="glyphicon glyphicon-remove"></span> 
+        </button>
+	</th>
+</tr>
+% foreach my $column (@{$columns}) {
+  % unless ($column eq 'id') {
+<tr>
+	<td>
+	<%= $column %>
+	</td>
+	<td>
+	% if ($column eq 'notes' || $column eq 'data') {
+	%= text_area $column, cols => 40, rows => 10
+	% }
+	% else {
+	%= input_tag $column
+	% }
+	</td>
+</tr>
+  % }
+% }
+</form>
+</table>
+
+<table id="Projects" class="table table-striped table-bordered" style="display: block;">
+<tr>
+	<th>#</th>
+	<th>Sav.</th>
+	<th>Del.</th>
+	<th>id</th>
+% foreach my $column (@{$columns}) {
+   % unless ($column eq 'id') {
+	<th id="<%= $column %>">
+	<a href="/admin/database/<%= $db %>/<%= $current %>-<%= $limits %>/<%= $column %>"><%= $column %></a>
+	<a href="#rename">
+	<button type="button" class="btn btn-default btn-xs" style="color: #337ab7;" onclick="RenameColumn('<%= $column %>')">
+          <span class="glyphicon glyphicon-pencil"></span>
+        </button>
+        </a>
+	<button type="button" class="btn btn-default btn-xs" style="color: red;" onclick="myWarning2('/admin/dropcolumn/<%= $db %>/<%= $column %>', 'Are you sure you want to delete <%= $column %>?  This cannot be undone, and requires an app restart!')">
+          <span class="glyphicon glyphicon-remove"></span> 
+        </button>
+	</th>
+   % }
+% }
+</tr>
+% foreach my $id (@{$ids}) {
+<tr id="<%= $results->{$id}{'id'} %>">
+	<td><a href="/admin/database_single/<%= $db %>/<%= $id %>/<%= $limits %>/<%= $column %>">
+	<button type="button" class="btn btn-default btn-xs" style="color: #337ab7;">
+		<%= $rowcount %>  <span class="glyphicon glyphicon-pencil"></span>
+	</button>
+	</a></td>
+<form action="/admin/editrow?_method=PUT" method="POST">
+	<td>
+	<button type="submit" class="btn btn-default btn-xs"  style="color: SeaGreen;">
+		<span class="glyphicon glyphicon-floppy-disk"></span>
+	</button>
+	</td>
+	<td>
+	<button type="button" class="btn btn-default btn-xs" style="color: red;" onclick="myWarning2('/admin/droprow/<%= $db %>/<%= $results->{$id}{'id'} %>/admin/database/<%= $db %>', 'Are you sure you want to delete this Row?  This cannot be undone!')">
+          <span class="glyphicon glyphicon-floppy-remove"></span>
+        </button>
+	</td>
+	<td>
+	%= hidden_field id => $results->{$id}{'id'}
+	<%= $results->{$id}{'id'} %>
+	</td>	
+%= hidden_field table => $db
+%= hidden_field routename => "database/$db"
+% foreach my $column (@{$columns}) {
+   % unless ($column eq 'id') {
+	<td>
+	% if ($db eq 'model' && $column eq 'setting_id'
+	% || $db eq 'exp_files' && (grep /$column/, ('home_phone', 'parent', 'email', 'adult_id',))
+        % || $db eq 'exp_settings' && $column eq 'photos'
+        % || $db eq 'minion_jobs' && $column eq 'parents') {
+	  % my $array;
+	  % for ($results->{$id}{$column}->@*) { 
+	    % $array .= $_ .',';
+          % }
+          % chop $array;
+          <input name="<%= $column %>" value="{<%= $array %>}">
+          % }
+          % else {
+          %= input_tag $column => $results->{$id}{$column}
+          % }
+	</td>
+   % }
+% }
+</form>
+</tr>
+% $rowcount++;
+% }
+</table>

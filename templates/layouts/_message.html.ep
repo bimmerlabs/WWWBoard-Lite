@@ -1,0 +1,64 @@
+% if (my $error = flash 'error') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Red;">
+	<span class="fas fa-exclamation-triangle"></span>
+	Error: <%== $error %>
+	</li>
+</ul>
+% }
+% if (my $error = stash 'error') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Red;">
+	<span class="fas fa-exclamation-triangle"></span>
+	Error: <%== $error %>
+	</li>
+</ul>
+% }
+% if (my $warning = flash 'warning') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Orange;">
+	<span class="fas fa-exclamation-circle"></span>
+	Warning: <%== $warning %>
+	</li>
+</ul>
+% }
+% if (my $warning = stash 'warning') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Orange;">
+	<span class="fas fa-exclamation-circle"></span>
+	Warning: <%== $warning %>
+	</li>
+</ul>
+% }
+% if (my $message = flash 'message') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: SeaGreen;">
+	<span class="fas fa-check-circle"></span>
+	<%== $message %>
+	</li>
+</ul>
+% }
+% if (my $message = stash 'message') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: SeaGreen;">
+	<span class="fas fa-check-circle"></span>
+	<%== $message %>
+	</li>
+</ul>
+% }
+% if (my $message = flash 'info') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Blue;">
+	<span class="fas fa-info-circle"></span>
+	<%== $message %>
+	</li>
+</ul>
+% }
+% if (my $message = stash 'info') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Blue;">
+	<span class="fas fa-info-circle"></span>
+	<%== $message %>
+	</li>
+</ul>
+% }

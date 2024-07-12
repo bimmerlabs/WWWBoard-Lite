@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title><%= title =%></title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <script src="https://kit.fontawesome.com/0313d49f7f.js" crossorigin="anonymous"></script>
+  <link href="/overrides.css?1.0" rel="stylesheet" type="text/css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="/ajax.js?1.0"></script>
+  <script src="/interface.js?1.0"></script>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" href="/favicon/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon/modelpublisher.ico" type="image/x-icon">
+  <meta name="description" content="Postgres Admin">
+  <meta name="keywords" content="Mojolicious,Postgres,Perl">
+  <meta name="author" content="Chris Seigman">
+</head>
+<body>
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+       <!--<a class="navbar-brand" href="<%= url_for '/' %>"> <img src="/images/modelpublisher_sm.png" height="40px" style="margin-top:-9px"> </a> -->
+       <a class="navbar-brand" href="<%= url_for '/' %>"> Postgres Admin</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <!--<li><a href="/help"><span class="far fa-question-circle"></span> Help</a></li>-->
+      % if (my $id = session 'id') {
+        <li><a href="/account"><span class="fas fa-user-cog"></span> Account</a></li>
+        <li><a href="/account/logout"><span class="fas fa-sign-out-alt"></span> Logout</a></li>
+      % }
+      % else {
+        <li><a href="/account/register"><span class="fas fa-user-plus"></span> Register</a></li>
+        <li><a href="/account/login"><span class="fas fa-sign-in-alt"></span> Login</a></li>
+      % }
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid toolbar">
+    <div class="col-sm-12 text-left">
+      <ul class="nav nav-tabs">
+        %= include 'layouts/_admin_nav'
+      </ul>
+    </div>
+</div>
+
+<div class="container-fluid text-center">    
+  <div class="row content">
+    <div class="col-sm-12 text-left" id="txtContent" style="height: 100%; overflow-y: scroll;">
+    <br>
+      %= include 'layouts/_message'
+      <%= content =%>
+    </div>
+    
+  </div>
+</div>
+
+<footer class="container-fluid text-center">
+<p>Postgres Admin <a href="/change_log.txt" style="color: white; text-decoration: underline;">v<%= config->{'version'} %></a> by Chris Seigman</p>
+</footer>
+
+</body>
+</html>

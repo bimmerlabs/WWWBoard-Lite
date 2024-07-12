@@ -1,0 +1,8 @@
+% if (my $error = flash 'error') {
+<ul class="list-group">
+	<li class="list-group-item" style="color: Red;">
+	<span class="fas fa-exclamation-triangle"></span>
+	<%= $error %>
+	</li>
+</ul>
+% }
