@@ -29,7 +29,9 @@ get '/faq' => 'faq';
 
 any '/post' => 'index';
 
-
+###############################
+# Admin (not required for this app to work)
+###############################
 # Control Panel
   get '/admin' => sub { shift->Admin::Controller::PsqlAdmin::home(@_); };
 # Update row schema (any table or value)
