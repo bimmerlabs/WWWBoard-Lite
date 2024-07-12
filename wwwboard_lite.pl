@@ -1,12 +1,70 @@
 #!/usr/bin perl
-use Mojolicious::Lite;
+use Mojolicious::Lite -signatures;
+use Mojo::Pg;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use Admin::Controller::PsqlAdmin;
 
+###############################
+# Initialization
+###############################
+my $config = app->plugin(Config => {file => 'myapp.conf'});
+app->secrets([$config->{'secret'}]);
+app->sessions->cookie_name($config->{'cookie_name'});
+app->static->paths([$config->{'public'}]);
+helper pg => sub { state $pg = Mojo::Pg->new($config->{'pg_db'}) };
+
+###############################
+# Routes
+###############################
 get '/' => sub { my $self = shift; my $post; $self->stash(post => $post); } =>
+  'index';
+
+get '/account/register' => sub { my $self = shift; my $post; $self->stash(post => $post); } =>
+  'index';
+get '/account/login' => sub { my $self = shift; my $post; $self->stash(post => $post); } =>
   'index';
 
 get '/faq' => 'faq';
 
 any '/post' => 'index';
+
+
+# Control Panel
+  get '/admin' => sub { shift->Admin::Controller::PsqlAdmin::home(@_); };
+# Update row schema (any table or value)
+  put '/admin/editrow' => sub { shift->Admin::Controller::PsqlAdmin::edit_row(@_); };
+# Add new rown to table
+  any '/admin/addrow' => sub { shift->Admin::Controller::PsqlAdmin::add_row(@_); };
+# Delete row
+  get '/admin/droprow/:table/:id/*routename' =>
+    sub { shift->Admin::Controller::PsqlAdmin::drop_row(@_); };
+# Add new column to database (requires app restart)
+  post '/admin/addcolumn' =>
+    sub { shift->Admin::Controller::PsqlAdmin::add_column(@_); } if app->mode eq 'development';
+# Drop column from database (requires app restart)
+  get '/admin/dropcolumn/:table/*column' =>
+    sub { shift->Admin::Controller::PsqlAdmin::drop_column(@_); } if app->mode eq 'development';
+# Rename column (requires app restart)
+  post '/admin/renamecolumn' =>
+    sub { shift->Admin::Controller::PsqlAdmin::rename_column(@_); } if app->mode eq 'development';
+# Add new table
+  any '/admin/addtable/:table' =>
+    sub { shift->Admin::Controller::PsqlAdmin::add_table(@_); } if app->mode eq 'development';
+# All Rows, one column
+  get '/admin/database/:table/:limits/*column' => {limits => '0-51', column => ''} =>
+    sub {
+    shift->Admin::Controller::PsqlAdmin::list_all_rows(@_);
+    };
+ # All Rows
+  get '/admin/database_search/:table/' => {limits => '0-51', column => ''} =>
+    sub {
+    shift->Admin::Controller::PsqlAdmin::list_all_rows(@_);
+    };
+# Specific Row / Parameter
+  get '/admin/database_single/:table/:id/:limits/*column' => {column => ''} => sub {
+    shift->Admin::Controller::PsqlAdmin::list_single_row(@_);
+  };
 
 app->start;
 
@@ -14,50 +72,21 @@ __DATA__
 
 @@ index.html.ep
 % layout 'default';
-% title 'WWWBoard::Lite Version 1.0!';
-  <div align="center">
-      <h1>WWWBoard::Lite Version 1.0!</h1>
-  </div>
-  Below is WWWBoard::Lite Version 1.0 ALPHA 1.
-  <hr size="7" width="75%">
-  <center>[ <a href="#post">Post Message</a> ] [ <a href="<%= url_for 'faq' %>">FAQ</a> ]</center> <hr size=7 width=75%>
-
-  <ul>
-  (messages posted here)
-  </ul>
-<a name="post"><center><h2>Post A Message!</h2></center></a>
-%= form_for post => begin
-  %= label_for name => 'Name:'
-  %= text_field name => $post->{name}, size => '50'
-  <br>
-  %= label_for email => 'E-mail:'
-  %= text_field email => $post->{email}, size => '50'
-  <p>
-  %= label_for subject => 'Subject:'
-  %= text_field subject => $post->{subject}, size => '50'
-  </p>
-  %= label_for message => 'Message:'
-  <br>
-  %= text_area message => $post->{message}, rows => '10', cols => '55'
-  <p>
-  %= label_for url => 'Optional Link URL:'
-  %= text_field url => $post->{url}, size => '50'
-  <br>
-  %= label_for url_title => 'Link Title:'
-  %= text_field url_title => $post->{url_title}, size => '50'
-  <br>
-  %= label_for img => 'Optional Image URL:'
-  %= text_field img => $post->{img}, size => '50'
-  </p>
-  %= submit_button 'Post Message'
-  %= tag 'input', type => 'reset'
-% end
+% title 'Welcome!';
+%= include 'layouts/_navigation'
+%= include 'layouts/_messages'
+%= include 'forms/_post_message'
+<div align="center">
 <br>(Original) scripts and WWWBoard created by Matt Wright and can be found at <%= link_to 'Matt\'s Script Archive', 'http://www.scriptarchive.com' %>
 <br>WWWBoard::Lite can be found on <%= link_to 'GitHub', 'https://github.com/bimmerlabs/WWWBoard-Lite' %>
+</div>
+%= include 'layouts/_footer'
+
 
 @@ faq.html.ep
 % layout 'default';
-% title 'WWWBoard::Lite Frequently Asked Questions';
+% title 'Frequently Asked Questions';
+%= include 'layouts/_navigation'
 <h1>WWWBoard::Lite Frequently Asked Questions and Answers</h1>
 Here is a brief explanation of some of the questions you may have 
 about WWWBoard.
@@ -94,17 +123,75 @@ should then appear.</p>
 <p>The (original) scripts were written in Perl and created by <%= link_to 'Matt Wright', 'http://www.mattwright.com/' %>.  They are 
 free to anyone who wishes to use them and you can get them as well as other 
 scripts at: <%= link_to 'http://www.scriptarchive.com/' %>.</p>
-<p>WWWBoard::Lite is a re-imagined version of the original scripts from 1995.  It is meant to look the same on the surface, but under the hood it is much, much differet - despite being written in the same language (Perl 5).  20+ years of improvements in both the Perl interpreter and coding practices make a big difference!  The source can be found on <%= link_to 'GitHub', 'https://github.com/bimmerlabs/WWWBoard-Lite' %></p>
+<p>WWWBoard::Lite is a re-imagined version of the original scripts from 1995.  
+It is meant to look the same on the surface, but under the hood it is much, much differet - despite being written in the same language (Perl 5).  
+20+ years of improvements in both the Perl interpreter and coding practices make a big difference!  
+The source can be found on <%= link_to 'GitHub', 'https://github.com/bimmerlabs/WWWBoard-Lite' %></p>
 <p>Enjoy!</p>
-<hr>
+%= include 'layouts/_footer'
+
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>
 <html>
-  <head><title><%= $title %></title></head>
+  <head><title><%= config->{'title'} %> <%= $title %></title></head>
   <body>
-
 <%= content %>
-    
   </body>
 </html>
+
+
+@@ layouts/_navigation.html.ep
+  <div align="center">
+      <h1><%= config->{'title'} %></h1>
+  </div>
+  <hr size="7" width="75%">
+  <center>[ <a href="/#post">Post Message</a> ] [ <a href="<%= url_for '/account/register' %>">Register</a> ] [ <a href="<%= url_for '/account/login' %>"> Login</a> ] [ <a href="<%= url_for 'faq' %>">FAQ</a> ] [ <a href="<%= url_for 'admin' %>">Admin</a> ]</center> <hr size=7 width=75%>
+
+
+@@ layouts/_footer.html.ep
+<hr size="7" width="75%">
+<div align="center">
+<p><%= config->{'title'} %> <a href="/change_log.txt" >Version <%= config->{'version'} %></a></p>
+</div>
+
+
+@@ layouts/_messages.html.ep
+<div align="center">
+  <ul>
+  (messages posted here)
+  </ul>
+</div>
+<hr size="7" width="75%">
+
+
+@@ forms/_post_message.html.ep
+<center>
+<a name="post"><h2>Post A Message!</h2></a>
+%= form_for post => begin
+  %= label_for name => 'Name:'
+  %= text_field name => $post->{name}, size => '50'
+  <br>
+  %= label_for email => 'E-mail:'
+  %= text_field email => $post->{email}, size => '50'
+  <p>
+  %= label_for subject => 'Subject:'
+  %= text_field subject => $post->{subject}, size => '50'
+  </p>
+  %= label_for message => 'Message:'
+  <br>
+  %= text_area message => $post->{message}, rows => '10', cols => '55'
+  <p>
+  %= label_for url => 'Optional Link URL:'
+  %= text_field url => $post->{url}, size => '50'
+  <br>
+  %= label_for url_title => 'Link Title:'
+  %= text_field url_title => $post->{url_title}, size => '50'
+  <br>
+  %= label_for img => 'Optional Image URL:'
+  %= text_field img => $post->{img}, size => '50'
+  </p>
+  %= submit_button 'Post Message'
+  %= tag 'input', type => 'reset'
+% end
+</center>

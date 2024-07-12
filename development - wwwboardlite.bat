@@ -1,2 +1,2 @@
 @echo off
-morbo wwwwboard_lite.pl
+morbo wwwboard_lite.pl
